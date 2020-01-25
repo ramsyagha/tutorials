@@ -1,6 +1,6 @@
 # Disease Evolutionary Ecology Lab - Introduction to R 
 
-This will hopefully grow into an incremental set of R tutirials which are aimed to provide newcomers working in our lab with the basics to get started with R
+This will hopefully grow into an incremental set of R tutorials aimed to provide newcomers working in our lab the basics to get started with R
 
 ## Contents
 
