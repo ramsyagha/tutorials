@@ -1,0 +1,207 @@
+---
+title: "Data Manipulation - the apply functions"
+author: "Ramsy Agha"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+```
+
+## Data manipulation - The `apply` family functions
+
+
+Oftentimes, you want to summarize or process your data, for example to produce summary statistics from raw measurements, such as means, standard deviations, etc. 
+
+
+This can be easily done in R. In particular, using a set of functions known as the `apply` funtion family. We call it a family because it is a group of similar functions work similarly, although each of them is applied depending on what type of R-object we want as input and output. This may sound a bit confusing, ha? Let us leave that aside for a moment and focus on how these functions work: 
+
+To manipulate data, the `apply` functions use a strategy called __Split, Apply, Combine__. The picture below tries to illustrate this with a very easy example:
+
+![Schematic represnetation of the split-apply-combine strategy](./Split_apply_combine.png)
+
+The Split-Apply-Combine strategy consists of taking an R object, e.g. a dataframe, and split it according to a given criterium (in this case according to column A). Then, a given function is applied on every produced fragment of the dataset (in this case the sum() function, which sums up all values of every split). Lastly, all processed fragments are combined into a single R object (in this case a dataframe). This is a very powerfull feature of R, as we will see in minute. The `apply` functions are called functions of functions, because one can use a wide range of functions during the __Apply__ phase. 
+
+One last thing: You might have noted that I used the term R object in the last paragraph. This is because these functions work on a number of class or types of data that a commonly used in R. You will be mostly using dataframes, but other objects, such as lists, vectors, matrix, etc. are not uncommon. Depending what type of data you want to Split (i.e. input object), and what type of object you want the processed data to Combined into (i.e. output) you will need to use one apply function or another. See the table below for a summary:
+
+![You dont need to remenber this, theres is a trick to remember this :)](./pplyr_functions.png)
+
+
+
+
+
+## Let's try it out 
+
+The apply functions are contained within the `plyr` package. Make sure you have it installed and loaded:
+
+
+
+```{r}
+library(plyr)
+```
+
+
+
+
+Each of the xxply functions (`daply`, `ddply`, `llply`, `laply`, …) has the same structure and has 4 key features and structure:
+
+```xxply(.data, .variables, .fun)```
+
+- The first letter of the function name gives the input type and the second gives the output type.
+
+- data - gives the data object to be processed
+
+- variables - identifies the splitting variables
+
+- fun - gives the function to be called on each piece
+
+
+Ready? Lets read the file GrazingExp.csv
+
+
+
+```{r}
+data <- read.csv("GrazingExp.csv", header = T, sep = ",")
+```
+
+
+
+
+Lets calculate the mean body size of the Daphnia adults by treatment from the "master" dataset. 
+
+Test this code on your terminal, see the output, and then lets explain whats going on. 
+
+
+
+
+```{r}
+mean_body_size <- ddply(data, c("treatment"), summarise,
+                        
+                        mean_size_adults = mean(size_m, na.rm = T))
+
+mean_body_size
+```
+
+
+
+Let’s walk through the previous code:
+
+.The `ddply` function uses a data.frame ( that's why _function starts with d_) and returns another data.frame ( _2nd letter is a d_)
+
+- The first argument we gave is the data.frame we want to operate on: in this case _data_. 
+- The second argument indicated our split criteria: in this case the “treatment” column. Note that we gave the name of the column, not the values of the column. Plyr takes care of these implementation details for you.
+- The third argument is the function we want to apply to each grouping of the data. We used the function summarise, which rewduces multiple values down to a single value. But how shall R do that? We need to specify how to summarise the data. We want to make the mean o this data. Therefore, we provide the name of the output column (mean_body size) and define how it is calculated (calculating the mean of size_m). Note that we had to add the argument `na.rm=TRUE` to tell R to remove the NA from the calculation
+
+
+Makes sense, right? The good thing is that we can add as many variables as we want as split criteria. Adnd we can create as many output summaries as we want. 
+
+Let's go for _a challenge_. Use ddplr to produce a dataset, analogous to the last one we did, that contains by genotype and treatment:
+
+- The mean body size of offspring from the first clutch (size_c1)
+- Standard deviation (use the `sd()` function)
+
+
+
+Hint 1:
+
+```{r}
+# to introduce more than one variable as a single split criteria you will need to use the c() function
+
+# remember to tell R to ignore the missing data where appropriate
+
+```
+
+
+
+Solution:
+
+```{r}
+
+e <- ddply(data, c("genotype", "treatment"), summarise,
+           mean_size_1st_clutch = mean(size_c1, na.rm = TRUE),
+           sd = sd(size_c1, na.rm=T))
+
+e
+```
+
+
+Ok, well done! But we are not done yet! Now create a new dataframe called "summary" with the code above, but add the following items 
+
+- Number of cases (N)
+- Standard error (remember that std error is calculated as the _std deviation divided by the square root of N_)
+
+
+
+Hint 1:
+
+```{r}
+# How could you count the cases? 
+
+# You could tell R to sum all cases that are not missing values. But how? Remember the very first R lesson where we talked about logical operators? How do we refer to as "NOT". 
+
+# Exactly, using ! (exclamation mark)
+
+#  Try to combine ! with the function `is.na()` which provides a 1 when it reads NA and a 0 when if reads a value.   
+
+```
+
+
+
+Partial solution 1:
+```{r, eval=F}
+
+# the syntax you are looking for calculating N is 
+
+N = sum(!is.na(size_c1))
+
+# We are telling R to sum all the 1 that are produced when reading non-NA values. That's our count right there!
+
+```
+
+
+
+Hint 2:
+
+```{r}
+# the function sqrt() gives the square root of whatever we put into the brackets
+```
+
+
+
+Partial solution 2:
+
+```{r, eval=F}
+# the syntax you are looking for computing the standard error is 
+
+sdt_error = sd / sqrt(N)
+
+```
+
+
+Now put everything together to produce the dataset "summary" that contains all the data required:
+
+
+
+```{r}
+
+
+summary <- ddply(data, c("genotype", "treatment"), summarise,
+                 N = sum(!is.na(size_c1)),
+                 mean_size_1st_clutch = mean(size_c1, na.rm = TRUE),
+                 sd = sd(size_c1, na.rm=T),
+                 sdt_error = sd / sqrt(N))
+
+summary
+                 
+                 
+```
+
+
+You are a PRO! 
+
+Note how useful this new data set can be. You have compiled the means, std deviation and standard error of your variable of interest, which you can readily use to produce plots that include error bars (either as sd or s.e.)
+

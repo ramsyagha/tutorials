@@ -1,0 +1,228 @@
+---
+title: 'Introduction to R: Data Handling'
+author: "Ramsy Agha"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: "hide"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+```
+
+
+
+# Data handling practice
+
+Ok, you´re done with this long experiment you have been doing over the last weeks and are ready to analyze you precious data. In your experiment, you have been analyzing life history traits of single individual corresponding to four Daphnia genotypes exposed to four different treatments (this is actually a real dataset, see Agha et al. 2016 Sci Reps). For some reason, your data was saved in four separate files, each containing results for each of the treatments. 
+
+- The first part of your exercise is to load the indvidual data sets into R.
+- The second part is to modify the data sets and merge them with the help of your original identification key to one "master" data set.
+
+
+
+_This exercise is meant to introduce you to general ways of working with data in R_  
+
+
+__Before you start__  
+Running computational analyses can quickly produce a large number of files with very uninformative names. Therefore, generally, it is a good idea to create specific folders to work in. When you create a new folder, add your data sets to analyse and save an R script for the specific analyses in that folder. In that R script, you can set that folder as working directory with the `setwd()` command. This allows you to load all files in this directory without giving the full path, and it makes sure that all your output files will end up in that same directory, too.
+
+## Load data
+
+Please read the files treatment1.csv, treatment2.csv, treatment3.txt, and treatment4.csv into R.
+
+Getting your data sets into R is the first obstacle you need to overcome. I wanted to give you a realistic example, so all files are a bit different. Make sure you have a look at your imported files to check that they look alright, before you continue. If you have trouble importing the files, you can always open them in a text editor or the terminal to have a look at them. Also, if you are unsure about the syntax or argument of the functions, you can always consult the help dumentation by typing '?function' in the console.
+
+Let's go through it for each file.
+
+
+__treatment1.csv__  
+Please import as "t1".  
+Hint:
+```{r treatment1.csv_hint, eval=FALSE}
+# Use read.csv()
+# Figure out path to file with respect to your working directory
+# Have a look at the file, how are the columns separated?
+```
+Solution:  
+```{r treatment1.csv_solution, eval=TRUE}
+t1 <-  read.csv("Exercise_material/treatment1.csv", header=TRUE, sep=",")
+```
+
+__treatment2.csv__  
+Please import as "t2".  
+Hint:  
+```{r treatment2.csv_hint, eval=FALSE}
+# Have a look at the file, how are the columns separated?
+```
+Solution:  
+```{r treatment2.csv_solution, eval=TRUE}
+t2 <-  read.csv("Exercise_material/treatment2.csv", header=TRUE, sep=";")
+```
+
+__treatment3.txt__  
+Please import as "t3".  
+Hint:  
+```{r treatment3.txt_hint, eval=FALSE}
+# Ui, this time it's txt file
+# Which character separates the data entries/columns in this case?
+# How do you specify that? Use the help window for 'read.csv()'
+```
+Solution:  
+```{r treatment3.txt_solution, eval=TRUE}
+t3 <- read.csv("Exercise_material/treatment3.txt", header=TRUE, sep="\t")
+```
+
+__treatment4.csv__  
+Please import as "t4".  
+
+Hint:  
+```{r treatment4.csv_hint, eval=FALSE}
+# No hints! this one is easy!
+```
+
+Solution:  
+```{r treatment4.csv_solution, eval=TRUE}
+t4 <-  read.csv("Exercise_material/treatment4.csv", header=T, sep=",")
+```
+
+
+## Inspect and modify the data frames
+
+Inspect the data frames. Do they contain all the relevant information? We should have a number of variable in each dataset:  
+
+- Treatment, 
+- _Daphnia_ genotype, 
+- replicate ID, 
+- age (i.e. age at first reproduction), 
+- clutch1 (number of offspring at first clutch),
+- number of clutches, fecundity (total number of offspring),
+- dead (indicates how much of the offspring was found dead),
+- lifespan, death (whether the animal died before the end of the experiment or not), - 
+- 3 sizes (all in micrometers) of mothers, 1st and 3rd clutch.
+
+
+Hint for looking at the data sets:
+```{r inspection_hint, eval=FALSE}
+# try: str(), dim(), head(), colnames()   
+# to view them: type their name or click on their name in the "environment" window (top right)
+```
+
+Solutions:
+```{r 1_inspection_solution, eval=FALSE}
+dim(t1) # 13 columns: ok!
+str(t1) # correct type (integer/numeric)
+colnames(t1)
+head(t1) # looks alright
+# alternatively, click on the data frame in the top right window in your RStudio
+```
+
+Check all data set the same way. What did you find?
+
+```{r data_set_troubleshooting}
+# t1: generally ok
+# t2: measured in mm --> we need to convert the last 3 columns to um! 
+# t3: seems ok
+# t4: This one looks terrible! The variables were attributed wrong classes and NAs sometimes appear #N/A. R wont be able to work with that!
+# All data frames have to have the same column names, do they?.
+```
+
+Alright, don't panick. Let's go one dataset at a time
+
+Let's modify the columns in treatment2 to fit the same units as the measurements from the other two data frames (i.e. um).
+Hint:
+```{r mm_to_um_hint, eval=F}
+# create a new column, e.g. size_m
+# assign the new column with the corresponding "old" column multiplied by 1000 to transform the meausrement to micrometers
+# check that it worked properly, if necessary, remove superfluous old data
+```
+
+Suggestions for solution:
+```{r mm_to_um_solution}
+# one by one
+t2$size_m <- t2$size_m_mm * 1000
+t2$size_c1 <- t2$size_c1_mm * 1000
+t2$size_c3 <- t2$size_c3_mm * 1000
+
+#have a look whether it looks correct, then remove the old columns ("_mm")
+t2$size_m_mm <- NULL
+t2$size_c1_mm <- NULL
+t2$size_c3_mm <- NULL
+
+
+# Bonus options
+# deleting several columns at once: 
+#t2[,c("size_m_mm", "size_c1_mm", "size_c3_mm")] <- list(NULL)
+
+# apply a function across a selection of colums
+#t2.1 <- apply(t2[,c(11:13)], 2, function(x) x*1000)
+
+
+# multiply a selection of columns
+#t2.2 <- t2[,c(1:4)]*1000
+
+
+# useful: check whether the different methods produce identical data sets
+#all(t2.1==t2.2)
+```
+
+Ok, lets deal with treatment4: It has some N/As from excel (we all hate Excel now). Lets replace them by NA
+
+Hint
+```{r NA_ID, include=FALSE}
+# You can replace the string of characters "#N/A" by NA is all the t4 dataset 
+```
+
+Solution:
+```{r homogenize_NA_ID_s}
+t4[t4 == "#N/A"] <- NA
+```
+
+Check that everything is okay. Now we have to attribute the correct class to the variables. Selct the individual variable one by one and transform them to the correct class 
+
+Hint
+```{r amend_variables_hint, include=FALSE}
+# check the dataset using str() and check which varibles have incrrect classes
+# You can use the functions `as.number()` , as.integer(), as.factor()
+```
+
+```{r adding_column_solution}
+t4$age <- as.integer(t4$age)
+t4$clutch1 <- as.integer(t4$clutch1)
+t4$fecundity <- as.integer(t4$fecundity)
+t4$size_m <- as.numeric(t4$size_m)
+t4$size_c1 <- as.numeric(t4$size_c1)
+t4$size_c3 <- as.numeric(t4$size_c3)
+t4$dead <- as.integer(t4$dead)
+```
+
+Ok, were set!
+
+
+
+Now let's try to join the four datasets together into a master dataset containing all four treatments.
+
+Hint:
+```{r join_hint_1, eval=FALSE}
+# to stack the data sets by rows, use bind_rows() or rbind() 
+```
+
+Solution:
+```{r join_solutions}
+library(tidyverse)
+master <- bind_rows(list(t1, t2, t3, t4))
+
+```
+
+
+```{r, include=FALSE}
+master$treatment <- as.factor(master$treatment)
+```
+
+Tadaaa! Congratulations, well done!
+
+
+
