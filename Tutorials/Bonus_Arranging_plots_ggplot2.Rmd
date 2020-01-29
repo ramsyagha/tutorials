@@ -1,0 +1,100 @@
+---
+title: "Bonus lesson in ggplot - Arranging plots"
+author: "Ramsy Agha"
+date: "1/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bonus topic: Arranging plots with ggplot2
+
+__make sure__ `gridExtra` __is installed in your RStudio!__
+
+Often when creating figures for publications the figure in the final manuscript is actually composed of multiple figures. You could of course achieve this using third-party programs such as illustrator and inkscape however that means having to manually redo the figure in those programs anytime there is an update or change. Instead of going through that hassel let’s learn how to do it all programatically. To achieve this we will of course make our plots using ggplot, the gtable package to manipulate the plots post-creation, and the gridExtra package to do the actual aligning. Let’s go ahead and get started.
+
+we will load the grid library in order to create some visual objects to visualize, and use the gridExtra library to arrange these plots. We then create our objects to visualize, grob1-grob4. Theres no need to understand how these objects are created, this is just done to have something intuitive to use when arranging. Our next step is to create the layout for arrangment, we do this by creating a matrix where each unique element in the matrix (1, 2, 3, 4) corresponds to one of our objects to visualize. For example in the layout we use below we have 3 rows and 4 columns in which to place our visualizations. We specify the first row should all be one plot, the second row should be split between plots 2 and 3, and the third row should be split between plots 2 and 4. We then pass grid.arrange our objects to plot and the layout, so in this case grob1 corresponds to the element 1 in the matrix since grob1 is supplied first to grid.arrange.
+
+```{r grid_conceptual}
+# make objects to illustrate gridExtra functionality
+library(grid)
+library(gridExtra)
+
+# make objects to visualize
+# you can view these by doing grid.draw(grob1)
+grob1 <- grobTree(rectGrob(gp=gpar(fill="#EE5A24", alpha=1)), textGrob("1", gp=gpar(fontsize=28)))
+grob2 <- grobTree(rectGrob(gp=gpar(fill="#009432", alpha=1)), textGrob("2", gp=gpar(fontsize=28)))
+grob3 <- grobTree(rectGrob(gp=gpar(fill="#0652DD", alpha=1)), textGrob("3", gp=gpar(fontsize=28)))
+grob4 <- grobTree(rectGrob(gp=gpar(fill="#833471", alpha=1)), textGrob("4", gp=gpar(fontsize=28)))
+
+# create layout for arrangement and do the arrangement
+layout <- rbind(c(1, 1, 1, 1),
+                c(2, 2, 3, 3),
+                c(2, 2, 4, 4))
+grid.arrange(grob1, grob2, grob3, grob4, layout_matrix=layout)
+```
+
+It is also possible to add empty cells in our layout by inserting NA into our layout matrix. Below we split out grob2 from grob3 and grob4.
+
+```{r, grid_conceptual_2}
+layout <- rbind(c(1, 1, 1, 1, 1),
+                c(2, 2, NA, 3, 3),
+                c(2, 2, NA, 4, 4))
+
+grid.arrange(grob1, grob2, grob3, grob4, layout_matrix=layout)
+```
+
+
+There is much more information on how gridExtra works in the various gridExtra vignettes, obviously it is a powerful package for arranging plots, so make sure you read the documentation if you decide to use it. 
+
+It'a time for a small challenge! Let’s try an exercise to reinforce the concepts we’ve just learned. Try recreating the plot below:
+
+![image info](./grid_conceptual_3.png)
+
+Hint 1:
+
+```{r grid_conceptual_3_hint}
+
+# You will need to create a matrix matching the image above. See the exmaple above and use NAs where necessaray
+# How many columns and rown do you need in your matrix?
+
+```
+
+Hint 2:
+```{r grid_conceptual_3_hint2}
+
+# the layout matrix should be 5 columns by 4 rows
+
+```
+
+
+Solution: 
+```{r grid_conceptual_3_solution}
+grob1 <- grobTree(rectGrob(gp=gpar(fill="#EE5A24", alpha=1)), textGrob("1", gp=gpar(fontsize=28)))
+grob2 <- grobTree(rectGrob(gp=gpar(fill="#009432", alpha=1)), textGrob("2", gp=gpar(fontsize=28)))
+grob3 <- grobTree(rectGrob(gp=gpar(fill="#0652DD", alpha=1)), textGrob("3", gp=gpar(fontsize=28)))
+grob4 <- grobTree(rectGrob(gp=gpar(fill="#833471", alpha=1)), textGrob("4", gp=gpar(fontsize=28)))
+
+#load gridExtra
+library(gridExtra)
+
+# define layout
+layout <- rbind(c(1, 1, 1, 1, 1),
+                c(1, 1, 1, 2, 2),
+                c(NA, NA, NA, NA, NA),
+                c(NA, 4, 4, 3, NA))
+
+# make plot
+grid.arrange(grob1, grob2, grob3, grob4, layout_matrix=layout)
+
+```
+
+Ok, let's try it now with the plots we made before. We want to combine plots p15 ( final version of the facetted density plots), p9 (stackewd density plots) in layout like this
+
+
+
+
+
+UNfinished, prepare excercise
