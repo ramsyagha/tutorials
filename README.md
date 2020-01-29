@@ -2,6 +2,7 @@
 
 6 and 14 February, from 9:30 until ca. 17:30
 IGB, Müggelseedamm 310, seminar room
+Instructors: Ramsy Agha and Florent Manzi
 
 ***
 
