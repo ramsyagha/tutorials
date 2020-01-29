@@ -7,7 +7,7 @@ IGB, Müggelseedamm 310, seminar room
 
 ## Course Objectives
 
-This course will cover the basics of R and RStudio for beginner users. R is a basic yet powerful tool to analyse and interpret data and represent a basic tool for any scientific work. By the end of the course, the participants should be able to:
+This course will cover the basics of R and RStudio for beginner users. R is a basic yet powerful tool for data analysis and interpretation that represent a basic tool for any scientist. By the end of the course, participants should be able to:
 
 - confidently use of R, RStudio and its environment
 - understand the overall architechture of R, including most of R operators, types of data, main R-objects, and some basic functions
@@ -25,7 +25,7 @@ The course will have a strong component of practical work, supported by brief in
 ## What to bring
 
 - A laptop with a recent version of RStudio installed. Version 3.4 or higher is required to avoid compatibility issues. Please check before the start of the course and update your software if needed. 
-- Please also install the following packages: `tidyverse`, `dplyr` (add what else needed). Contact us if you encounter problems during installation.
+- Please also install the following packages: `tidyverse`, `dplyr` (__what else needed?__). Contact us if you encounter problems during installation.
 
 ## Course contents
 
