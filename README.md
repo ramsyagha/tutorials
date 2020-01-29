@@ -1,7 +1,7 @@
 # Disease Evolutionary Ecology Lab - Introduction to R 
 
-6 and 14 February, from 9:30 until ca. 17:30
-IGB, Müggelseedamm 310, seminar room
+6 and 14 February, from 9:30 until ca. 17:30 <br />
+IGB, Müggelseedamm 310, seminar room <br />
 Instructors: Ramsy Agha and Florent Manzi
 
 ***
