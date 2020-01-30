@@ -26,7 +26,7 @@ The course will have a strong component of practical work, supported by brief in
 ## What to bring
 
 - A laptop with a recent version of RStudio installed. Version 3.4 or higher is required to avoid compatibility issues. Please check before the start of the course and update your software if needed. 
-- Please also install the following packages: `tidyverse`, `dplyr` (__what else needed?__). Contact us if you encounter problems during installation.
+- Please also install the following packages: `tidyverse`, `dplyr`, `car`, `ggplot2`, `Hmisc`(__what else needed?__). Contact us if you encounter problems during installation.
 
 ## Course contents
 
