@@ -14,7 +14,7 @@ library(tidyverse)
 
 ## Introduction ggplot2
 
-There are several graphics programs available within the R environment. A package for base R graphics is installed by default and provides a simple mechanism to quickly create graphs. `lattice` is another graphics package a bit better than the base R graphics, but we will not cover it here. In this tutorial  we will use `ggplot2`, a graphics program based on the grammar of graphics ideology, that proofs to be the most effective way of producing publication quality graphs from your data. 
+There are several graphics programs available within the R environment. A package for base R graphics is installed by default and provides a simple way to quickly create graphs, yet it is visually not very attractive. `lattice` is another graphics package a bit better than the base R graphics, but we will not cover it here. In this tutorial, we will use `ggplot2`, a graphics program based on the grammar of graphics ideology, that proofs to be the most effective way of producing publication-quality graphs from your data. 
 
 We will be working with an existing dataset from (Agha et al. 2016 Sci Reps. _Chytrid parasitism facilitates trophic transfer between bloom-forming cyanobacteria and zooplankton_). The dataset contains several life history traits data of a number of _Daphnia_ genotypes that were raised under different feeding conditions.
 
@@ -24,7 +24,7 @@ We will be working with an existing dataset from (Agha et al. 2016 Sci Reps. _Ch
 ## ggplot syntax
 
 
-A pretty cool thing about ggplot is that it works using a very intutive, additive syntax, which consists of a system of __layering graphical objects__ to produce a final plot. It is important to remember that ggplot always works with R objects of the class dataframe. 
+A pretty cool thing about ggplot is that it works using a very intutive additive syntax, which consists of a system of __layering graphical objects__ to produce a final plot. It is important to remember that ggplot always works with R objects of the class dataframe. 
 
 
 ### Load data
@@ -32,12 +32,18 @@ A pretty cool thing about ggplot is that it works using a very intutive, additiv
 __Before you start__  
 Running computational analyses can quickly produce a large number of files with very uninformative names. Therefore, generally, it is a good idea to create specific folders to work in. When you create a new folder, add your data sets to analyse and save an R script for the specific analyses in that folder. In that R script, you can __set that folder as working directory with the `setwd()` command__. This allows you to load all files in this directory without giving the full path, and it makes sure that all your output files will end up in that same directory, too.
 
-Please read the GrazingExp.csv into R. This file should be located where you downloaded the course materials. Make sure to specify the path where the files are located, i.e. specifying your working directory using `setwd()`  
+Please read the GrazingExp.csv into R. This file should be located where you downloaded the course materials. Make sure to specify the path where the files are located, i.e. specifying your working directory using `setwd()` 
+
+***
+
+*Rules of this tutorial: Read the text, reveal code, type code (NO COPY+PASTE) in your RStudio, understand what is happening. You will need to apply later what you learn here*
+
+***
 
 Load the file GrazingExp.csv into R. 
 
 ```{r import_data}
-data <- read.csv("GrazingExp.csv", header = T, sep = ",")
+data <- read.csv("datasets/GrazingExp.csv", header = T, sep = ",")
 ```
 Examine that the imported data looks alright
 
@@ -53,7 +59,7 @@ Are you happy with it? Ok, lets plot some data then.
 ## Geometric objects and aesthetic mapping
 
 
-For the moment lets focus on the bidy size of the adults. the values are under the variable `size_m`
+For the moment lets focus on the body size of the adults. The values are under the variable `size_m`
 
 
 ```{r aes_mapping}
@@ -63,7 +69,7 @@ p1
 
 ```
 
-The object stored in variable p1 has generated a blank plot in the bottom right “Plots” window of Rstudio. We invoked ggplot with the function `ggplot()` and specified the data frame we are trying to plot. We then supplied aesthetic mappings with 'aes()'. In essence, this tells R which columns ggplot should assign to the geometric objects aesthetics. In this specific case, we are telling ggplot that the data is in the data frame named “data”, the column "treatment" should be plotted along the x-axis, and te column "size_m" should be plotted along the y-axis. Note that ggplot has determined the axis scales, given the ranges in the data supplied. However, nothing is actually plotted. What´s going on? At this point, we have passed what data we want plotted. However, we have not specified yet __how__ it should be plotted. This is what the various geometric objects in ggplot are used for (e.g. `geom_point()` for scatterplots, `geom_bar()` for bar charts, etc). These geometric objects are added as plot layers to the `ggplot()` base command using a `+`.
+The object stored in variable p1 has generated a blank plot in the bottom right “Plots” window of Rstudio. We invoked ggplot with the function `ggplot()` and specified the data frame we are trying to plot. We then supplied aesthetic mappings with 'aes()'. In essence, this tells R which columns ggplot should assign to the geometric object aesthetics. In this specific case, we are telling ggplot that the data is in the data frame named “data”, the column "treatment" should be plotted along the x-axis, and the column "size_m" should be plotted along the y-axis. Note that ggplot has determined the axis scales, given the ranges in the data supplied. However, nothing is actually plotted. What´s going on? At this point, we have passed what data we want to be plotted. However, we have not specified yet __how__ it should be plotted. This is what the various geometric objects in ggplot are used for (e.g. `geom_point()` for scatterplots, `geom_bar()` for bar charts, etc). These geometric objects are added as plot layers to the `ggplot()` base command by using a `+`.
 
 
 ```{r scatter_1}
@@ -79,9 +85,9 @@ p2
 
 
 Both plot p1 and plot p2 generate an identical scatter plot, comparing the column "size_m" on the y-axis to the column "treatment" on the x-axis. While the plots generated by the p1 and p2 variables may appear identical, we should know their differences. In method 1 (plot p1), we call ggplot() with a data frame (data) and an aesthetic mapping of treatment and size_m for x and y, respectively. In this method the information is passed to ALL subsequent geometric objects and is used as appropriate in those objects. In this case, the only geometric object we have included is `geom_point()`. The geom_point() layer is then added using the information passed from ggplot(). 
-Conversely, in method 2 (plot p2), we call `ggplot()` without defining the data or aesthetic mapping. This information is specified directly in the geom_point() layer. If any additional geometric objects were added as layers to the plot, we would specifically have to define the data and aesthetics within each additional layer. __Don't forget this!__ This is especially useful when plotting data from multiple datasets on the same plot!
+Conversely, in method 2 (plot p2), we call `ggplot()` without defining the data or aesthetic mapping. This information is specified later in the geom_point() layer. If any additional geometric objects were added as layers to the plot, we would need to specifically define the data and aesthetics within each additional layer. __Don't forget this!__. This reflects the hierarchical syntax of ggplot. This is especially useful when plotting data from multiple datasets on the same plot!
 
-We should also note that geometric objects can behave differently, depending on whether the plotted variable is continuous or discrete. In the example above (plot p1 and p2), we can see that the points have been grouped by "treatment" on the x-axis (i.e. T1, T2, T3, T4), while the numeric values sorted in the column “size_m” are plotted along a continuous y-axis scale. The position of the points (specified by `position="jitter"` in the geom_point() object) shifts the points apart horizontally, which often provides better resolution, especially when you get a lot of overlapping points. Try this now to see the difference:
+We should also note that geometric objects can behave differently, depending on whether the plotted variable is continuous or discrete. In the example above (plot p1 and p2), we can see that the points have been grouped by "treatment" on the x-axis (i.e. T1, T2, T3, T4), while the numeric values sorted in the column “size_m” are plotted along a continuous y-axis scale. The position of the points (specified by `position="jitter"` in the geom_point() object) shifts the points randomly apart horizontally, which often provides better resolution, especially when you get a lot of overlapping points. Try this now to see the difference:
 
 
 ```{r scatter_2}
@@ -90,7 +96,7 @@ p3 <- ggplot() + geom_point(data=data, aes(x=treatment, y=size_m), position="jit
 p3
 
 
-#You can do the same by using the geom_jitter instead
+#You can do the same by using the geom_jitter() instead
 p3 <- ggplot() + geom_jitter(data=data, aes(x=treatment, y=size_m))
 p3
 
@@ -116,10 +122,10 @@ p5
 
 ```
 
-Above we chose “darkorchid4” which has a hex value of “#68228B”. However the points in the first plot (p4) are red and not the expected purple color. Our points are appearing miscolored based upon how ggplot is interpreting the aesthetic mappings: 
-When the color aesthetic is specified for geom_point it expects a factor variable by which to color points. If we wanted to, for example, color every point according to the genotype they belong, we could supply the factor "genotype" to the color aesthetic. But, when we specified a quoted hex code, ggplot assumed we wanted to create such a factor with all values equal to the provided text (i.e. draarkorchid4). R did this for us and then used its internal color scheme to color that variable all according to the single category in the factor variable. By specifying the color outside the aesthetic mapping, geom_point knows to apply the color ‘darkorchid4’ to all of the points specified in the geom_point() layer (p4).
+Above we chose “darkorchid4” which has a hex value of “#68228B”. However, the points in the first plot (p4) are red and not the expected purple color. Our points are appearing miscolored based upon how ggplot is interpreting the aesthetic mappings, let me explain this: 
+When the color aesthetic is specified for geom_point, it expects a factor variable by which to color the points. If we wanted to, for example, color every point according to the genotype they belong, we could supply the factor "genotype" to the color aesthetic. But, since we specified a quoted hex code, ggplot thinks we want to create a factor with all values equal to the text provided (i.e. darkorchid4). R did this for us and then used its internal color scheme to randomly color that variable according to the single category in the factor variable. By specifying the color outside the aesthetic mapping, geom_point knows to apply the color ‘darkorchid4’ to all of the points specified in the geom_point() layer (p4).
 
-The syntax used in p5 makes sense if we want to display our points in a single color and we want to specify that color. The syntax used in p4 doesn’t make sense as used above, but something similar could be used if we wanted to color each point according to __a real factor__ in the data. For example, coloring points by the variable ‘genotype’  could be informative. __Try one of this now on your own__.
+In contrast, the syntax used in p5 makes sense if we want to display our points as a single color and we want to specify that color. The syntax used in p4 doesn’t make sense as used above, but something similar could be used if we wanted to color each point according to __a real factor__ in the data. For example, coloring points by the variable ‘genotype’  could be informative. __Try one of this now on your own__.
 
 Hint:
 ```{r scatter_color_hint}
@@ -138,7 +144,7 @@ p6
 
 ```
 
-Building on the above concepts, we could now try using the colour aesthetic to visualize our data as a density plot. For example we could examine the size distribution of the different genotypes. We will use `geom_density()` to plot a density kernel of the adult sizes (size_m), but colour the cohort based on "genotype" (let`s forget about the treatment for now). As described above, we will supply a factor the colour aesthetic.
+Building on the above concepts, we could now try using the colour aesthetic to visualize our data as a density plot. For example we could examine the size distribution of the different genotypes. We will use `geom_density()` to plot a density kernel of the adult sizes (size_m), but colour the points based on "genotype" (let`s forget about the "treatment" for now). As described above, we will supply the factor "genotype" to the colour aesthetic.
 
 
 ```{r density_2}
@@ -152,7 +158,7 @@ p7
 
 ```
 
-Hmm, it looks like `color=` is affecting only the color of the line. We need to filling colors in this case. Lets use `fill=`.
+Hmm, it looks like `color=` is affecting only the color of the line. We need filling colors in this case. Lets use `fill=`.
 
 ```{r density_3}
 
@@ -165,7 +171,7 @@ p8
 
 ```
 
-That's nicer, but let's add a bit of transparency to improve visibility of the curves in the beckground (using `alpha=`). Also the `geom_density` adds by default a very strong smoothing, let's reduce this a bit (use `adjust=`.
+That's nicer, but let's add a bit of transparency to improve visibility of the curves in the background (using `alpha=` with a value of 0.75). Also, the `geom_density` adds by default a very strong smoothing, let's reduce this a bit (use `adjust=` with a value of 0.5).
 
 ```{r density_4}
 
@@ -179,15 +185,15 @@ That's better, isn't it?
 
 ## Faceting 
 
-Faceting in ggplot allows us to quickly create multiple related plots at once with a single command. There are two facet commands, `facet_wrap()` will create a 1 dimensional sequence of panels based on a one sided linear formula. Similarly, `facet_grid()` will create a 2 dimensional grid of panels. Let’s try and answer a few quick questions about our data using facets.
+Faceting in ggplot allows us to quickly create multiple related plots at once with a single command. There are two facet commands: `facet_wrap()` will create a 1 dimensional sequence of panels based on a one sided linear formula. Similarly, `facet_grid()` will create a 2 dimensional grid of panels. Let’s try and answer a few quick questions about our data using facets.
 
-Let's create four plots similar to the above, but each one for each treament. Thereby we can visualize if the feeding treament had an effect of the body size of our daphnids.
+Let's create four plots similar to the above, but each one for each treament. Thereby we can visualize if the feeding treament had an effect on the body size of our daphnids.
 
 ```{r, facet_1}
 
 p10 <- ggplot() + 
   geom_density(data=data, aes(x=size_m, fill=genotype), alpha=.75, adjust=.5) +
-  facet_wrap(~treatment)
+  facet_wrap( ~ treatment)
 p10
   
 
@@ -196,7 +202,7 @@ p10
 Wow! It seems like the treatment 4 results in smaller Daphnia sizes, see how the graph is left-screwed! 
 
 
-Facetting is quite a useful feature of ggplot. You can also use facet_wrap to combine two variables in the facetting, that is, cereating different panels according to the combination of the levels of two factors. For example, let's create density plots in different panels, each containing a combination of genotype and treatment, and lets color the plots according to the treatment this time.
+Facetting is quite a powerful feature of ggplot. You can also use facet_wrap to combine two variables in the facetting, that is, creating different panels according to the combination of the levels of two factors. For example, let's create density plots in different panels, each containing a combination of genotype and treatment, and let´s color the plots according to the treatment this time.
 
 
 ```{r facet_2}
@@ -210,7 +216,7 @@ p11
 
 ## ggplot themes
 
-Almost every aspect of a ggplot object can be altered. We’ve already gone over how to alter the display of data but what if we want to alter the display of the non data elements? Fortunately there is a function for that called `theme()`. You’ll notice in the previous plot some of the x-axis names are colliding with one another, let’s fix that and alter some of the theme parameters to make the plot more visually appealing.
+Almost every aspect of a ggplot object can be altered. We’ve already gone over how to alter the display of data but what if we want to alter the display of the non-data elements? Fortunately, there is a function for that called `theme()`. You’ll notice in the previous plot some of the x-axis names are colliding with one another, let’s fix that and alter some of the theme parameters to make the plot more visually appealing. Type the code below:
 
 ```{r theme_1}
 
@@ -218,21 +224,21 @@ Almost every aspect of a ggplot object can be altered. We’ve already gone over
 p11 <- ggplot() + geom_density(data=data, aes(x=size_m, fill=treatment), alpha=.75, adjust=.5) +
   facet_grid(genotype ~ treatment)
 
-# load in a theme with a few presets set
+# load in a theme with the default preset (i.e. specify no arguments)
 p12 <- p11 + theme_bw()
 p12
 
 
 ```
 ```{r theme_2}
-# put the x-axis labels on a 45 degree angle
+# now let´s put the x-axis labels on a 45 degree angle to avoid collision
 p13 <- p12 + theme(axis.text.x=element_text(angle=45, hjust=1))
 p13
 
 ```
 
 
-Altering a few more visual apects (put the legend at top and make the base change labels white on a black background)
+Altering a few more visual aspects (let´s put the legend at top and make the base change labels white on a black background)
 
 ```{r theme_3}
 
@@ -247,12 +253,17 @@ let's add the correct titles to the x-axes label and remove the title from the y
 
 ```{r theme_4}
 
-p15 <- p14 + theme(axis.title.x=element_text("Body size of adults (um)"), axis.title.y = element_blank())
+p15 <- p14 + theme(axis.title.y = element_blank()) + xlab("Body Size (um)")
 p15
+
+# If you would want to have the micro symbol in the x-axis label added we would need a bit more complex (and not very practical) syntax
+
+# p15 <- p14 + theme(axis.title.y = element_blank()) + xlab(expression(paste("Body Size (", mu,"m)")))
+# p15
 ```
 
 
-As you see, non-data components of the graph are also fully customizable in ggplot. Remember that you can always consult the documentation if you dont remember the exact arguments. I do it all the time! :)
+As you see, non-data components of the graph are also fully customizable in ggplot. Remember that you can always __consult the documentation, the cheetsheats or google__ if you dont remember the exact arguments. I do it all the time! :)
 
 
 
