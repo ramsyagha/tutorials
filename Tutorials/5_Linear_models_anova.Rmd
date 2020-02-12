@@ -1,0 +1,517 @@
+---
+title: 'Data exploration and statistical analyses (ANOVA)'
+author: "Florent Manzi"
+date: "2020-02-10"
+output: 
+  html_document:
+    code_folding: "show"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE, message = FALSE, warning = FALSE, fig.keep = "all", fig.show = "asis", fig.width = 7, fig.height = 5, fig.show="hold",fig.align="center")
+```
+
+
+***
+
+*Rules of this tutorial: Read the text, reveal code, type code (NO COPY+PASTE) in your RStudio, understand what is happening. You will need to apply later what you learn here*
+
+***
+
+Set your working directory. Export the file 'GrazingExp.csv' that we used last week as dataframe.
+
+```{r}
+setwd("C:/Users/Acer/Desktop/R tutorials")
+
+data <- read.table("GrazingExp.csv",header=T,sep=',')
+
+```
+
+Check if this matches the way you recorded your csv file (header, separator).
+Click on the "grid" icon in the Data window.
+
+Does your data appear correctly ? It should be recognized as a table with '237 obs. of 13 variables'
+
+```{r}
+str(data)
+```
+
+Here you can see that there are two factors that could be used as __'explanatory variables'__:
+Which ones ? In which ways do they differ from, say, "age" or "fecundity" ?
+
+```{r}
+data$treatment<-as.factor(data$treatment)
+
+data$genotype<-as.factor(data$genotype)
+
+data$replicate<-as.factor(data$replicate) 
+```
+
+You want these three columns in your dataset to be recognized as "factors"
+
+This way, R will know the difference between 'an individual that produced 12 offspring' (12 is a numerical value, you want to calculate a mean out of these numbers) and an individual that is just called 'replicate n°12' (12 might be a number, but here it is simply used as a name, and doesn't make any sense mathematically).
+
+
+# Step 1: Data Exploration
+
+
+First, you want to know what your data looks like (is it normally distributed ? does it have unusual patterns, or too much variance ? missing values ?)
+
+This step is necessary to decide how to analyze it (=) what kind of model you want to build (lm ? glm ?) and which statistical tests you are allowed to run with this data.
+
+Which exploratory tools (functions) have we used last time ?
+
+```{r}
+head(data)
+str(data)
+```
+
+Let's start by having a look at the 'lifespan' response variable.
+
+```{r}
+dotchart(data$lifespan)
+```
+
+This is one of the variables that you measured, and you would like to know if the variables
+that you have controlled (feeding treatments, host genotype) actually __explain any differences in this variable.__
+
+```{r}
+boxplot(data$lifespan ~ data$treatment)
+boxplot(data$lifespan ~ data$genotype)
+```
+
+Using boxplot(), you can already get an idea if your variable of interest differs between treatments (or genotypes, etc.)
+
+Let's visualize our data as a simple histogram, to get an idea of its distribution:
+
+```{r}
+hist(data$lifespan)
+```
+
+Ideally, we would want to start with a variable that follows a normal distribution, which would make for a very nice and easy example.
+
+Is your data normally distributed ? This can be evaluated with help from a __'quantile-quantile plot'__
+
+```{r}
+qqnorm(data$lifespan)
+qqline(data$lifespan)
+```
+
+Ok, so here it is not sooo nice, but for the sake of our example, we will proceed as if it was the case !
+
+
+# Step 2: Build linear models and perform analyses of variance (ANOVA)
+
+
+Now that you have explored your data, you should know what your linear model will look like.
+
+In fact, a wise person once said: __"Your hypothesis, is your plot, is your model !!"__ (Kate Laskowski, circa 2019)
+
+Since we are working with a "normally distributed" variable, we can work with __simple linear models__ (as opposed with "generalized" linear models, also called GLM, which should be used for any other distribution). Thus, we can use the function built into R: lm()
+
+```{r, eval=FALSE}
+?lm()
+```
+
+The least we have to do is specify our dataset (data=), as well as a _formula_. With the function 'lm', you basically have to write a formula under this format:
+
+__Response variable ~ Factor1 + Factor2 + (etc.)__
+
+Similar to writing a mathematical function that looks like this: __y = a.x1 + b.x2 + (etc.)__
+
+First, let's start by creating our first, _full_ model (full = all fixed effects + interactions). Let's call it 'ml1'.
+
+
+```{r}
+ml1 <- lm(lifespan ~ treatment + genotype + treatment:genotype, data=data)
+
+```
+
+Tip: if you write treatment*genotype, you get (=) treatment + genotype + treatment:genotype
+
+However, if you write __treatment:genotype__, you get __only the interaction term__ (without the fixed effects).
+
+Then, let's use the summary() function. This will give you some important information, such as, the residual number of degrees of freedom (you will have to report these in your paper), the residual standard error (useful to identify 'overdispersion' of the model), etc.
+
+```{r}
+summary(ml1)
+```
+
+WARNING: the p-values that you see here are not the ones you are interested in, so don't report them yet. In fact, we still have to perform the ANOVA ! The anova() function is built into R.
+
+```{r}
+anova(ml1)
+##Analysis of Deviance Table (Type II tests)
+
+#Anova Table (Type II tests)
+
+#Response: lifespan
+#                    Df Sum Sq Mean Sq F value   Pr(>F)
+#treatment            3  684.8 228.279  7.5869 7.488e-05 ***
+#genotype             3  317.5 105.817  3.5169   0.01596 *  
+#treatment:genotype   9  400.7  44.524  1.4798   0.15659    
+#Residuals          221 6649.5  30.088  
+```
+
+How do you interpret this output ? Which values will you have to report in your ANOVA tables (e.g. in the 'Results' section of your thesis/paper ?)
+
+
+TIP: you can copy/paste your ANOVA results as 'green text' in your code (see above). This way, you can just open your scripts from two years ago and you won't have to re-run everything !
+
+
+NB: The 'anova' function from before always performs Type I tests (each variable is added in sequential order).
+
+Another function (Anova, with a capital letter) can be used to perform different subtypes of tests, namely Type II or Type III tests.
+
+Different types should be used depending on your data and question of interest (in particular, __are you looking at interactions between your fixed effects ?__)
+
+There is a lot of documentation about this topic online, it is not _so_ straightforward, when to use which, and people are still arguing over it !
+
+```{r}
+library(car)
+
+Anova(ml1, type="II")
+#Analysis of Deviance Table (Type II tests)
+
+#Anova Table (Type II tests)
+
+#Response: lifespan
+#                   Sum Sq  Df F value   Pr(>F)   
+#treatment           691.9   3  7.6651 6.762e-05 ***
+#genotype            317.5   3  3.5169   0.01596 *  
+#treatment:genotype  400.7   9  1.4798   0.15659    
+#Residuals          6649.5 221
+```
+
+PS: notice here how it did not change our results, but the p-value for 'treatment' is now slightly different !
+
+Let's try it with Type III, just for curiosity:
+
+```{r}
+Anova(ml1, type="III")
+#Analysis of Deviance Table (Type III tests)
+
+#Anova Table (Type III tests)
+
+#Response: lifespan
+#Sum Sq Df F value   Pr(>F)   
+#(Intercept)        2444.6   1 81.2488 <2e-16 ***
+#treatment            53.5   3  0.5925 0.6205    
+#genotype             78.6   3  0.8709 0.4569    
+#treatment:genotype  400.7   9  1.4798 0.1566    
+#Residuals          6649.5 221
+```
+
+So here probably Type III isn't adapted, seeing as we had no interaction of interest, and these results seem very fishy. When you're not sure, which type to use, always compare these outputs to your plots !
+
+Anyway, let's keep going with Type II !
+
+Previously we saw that the interaction between the 'treatment' and 'genotype' factors was not significant; therefore, we can remove this interaction term and create a new, reduced model, without the term that is not significant. Let's call it 'ml2'.
+
+```{r}
+ml2 <- lm(lifespan ~ treatment + genotype, data=data)
+
+summary(ml2)
+
+Anova(ml2)
+```
+
+That method is called __'stepwise regression'__. When you add more factors to a model, you also bring a lot of parameters that might not be very informative, given the response variable that you're trying to analyze.
+
+Basically, you want to remove terms that bring a lot of 'weight' to the model, without actually bringing any information to your analysis of variance.
+
+Thankfully, there exists a tool to evaluate how much useful information a term brings to your model, compared to its 'weight'.
+
+This is called the __Akaike Information Criterion__, often shortened as AIC.
+
+When proceeding towards stepwise regression, you always want to compare your successive models one-by-one (eg. ml1 against ml2), using the AIC() function
+
+This will give you an AIC value for each model, and you always want to keep the one with __the SMALLEST AIC !__
+
+```{r}
+AIC(ml1, ml2)
+```
+
+Report the AIC values of ml1: --- and ml2: ---
+
+Which model do you want to keep ?
+
+WARNING: oftentimes, AIC values are negative ! if ml1 is -1472 and ml2 is -1562, which one do you want to keep ?
+
+If removing one interaction term or factor from your model leads to a model with smaller AIC, that means that your term was probably a dead weight to your model (wasn't very informative compared to its 'cost' in parameters) !
+
+If you perform an ANOVA on your first (full) model and the interaction term comes out as significant, then that's it, you should __NOT__ remove it: just keep the full model !
+
+
+Alright, now that you've chosen the final model, we can still check how the data look after fitting this model !
+
+Remember our two conditions: __homogeneity of the variance__ & __normality of the residuals__.
+
+```{r}
+#fitted vs residuals (homogeneity of variance)
+plot(ml2)
+```
+
+NB: you might need to re-run this line a few times until we reach the "fitted vs. residuals" output in the plot window
+
+Alright, seems good ! No separate clusters, looks quite homogeneous.
+
+
+```{r}
+#normality of the residuals
+qqnorm(resid(ml2))
+qqline(resid(ml2))
+hist(resid(ml2))
+```
+
+Here it seems a little biased on one side (but for the sake of this example, let's say that we're okay with it).
+
+These steps help you 'validate' your model by evualuating if you used an adequate formula, and were indeed allowed to run an ANOVA on this dataset.
+
+
+## EXERCISE:
+Now, you can do the whole procedure again (data exploration -> linear model -> ANOVA) with another reponse variable of your choice in the dataset (e.g. size_m, fecundity...) !
+
+What do you conclude ? Do 'treatment' and/or 'genotype' explain any difference in this variable ? Is there a significant interaction term between these two factors, and how do you interpret it ?
+
+
+# Step 3: Use post-hoc tests to compare specific treatments of interest
+
+
+Congratulations ! In the previous steps, you have learned from R that "there is a significant effect of diet on survival". However, you are not sure if this means that all three diets are really different or, for instance, three of these lead to similar survival, and only the fourth one is really bad for the host... ?
+
+In that case, you want to perform 'post-hoc' tests (most of the time, you want to perform them "after" the broader analyses conferred by the ANOVA).
+
+We will use the common __Tukey's "Honestly Significant Difference" test__.
+
+The TukeyHSD() function is available in base R and takes a fitted aov object.
+
+Here, we can try yet another way to run an anova in R, the aov() function. You can directly feed the formula of your linear model to R using this function, and this will give you the results or your ANOVA right away.
+
+```{r}
+graz1<-aov(lifespan ~ treatment, data=data)
+
+tkt1<-TukeyHSD(graz1)
+
+tkt1
+```
+
+How would you interpret this output ? Which information did we learn that wasn't provided by the ANOVA alone ?
+
+We can also try it with the 'genotype' factor.
+
+```{r}
+graz2<-aov(lifespan ~ genotype, data=data)
+
+tkt2<-TukeyHSD(graz2)
+
+tkt2
+```
+
+
+Finally, using the final model (the one that you chose to stick with after the stepwise regression method):
+
+```{r}
+graz3<-aov(lifespan ~ treatment + genotype, data=data)
+
+tkt3<-TukeyHSD(graz3)
+
+tkt3
+```
+
+
+# Step 4: Plot your data using ggplot2 (feat. Hmisc, some life hacks)
+
+
+Now that you've run your statistical analyses, __you want to plot your data in a way that reflects these results and is easy to grasp visually !__
+
+Basically, if your statistical analyses say that a fixed effect or interaction term is significant, this should also be reflected on your plot ! (Otherwise, you probably did something wrong...)
+
+Conversely, plots alone can be deceiving, and it might look error bars are barely touching, yet your analyses will confirm that there is actually no significant difference between these treatments !
+
+When working with a large number of factors, it might be hard to identify, say, a triple interaction term (eg. treatment:genotype:temperature) based on your plot alone !
+
+Remember: __your hypothesis, is your plot, is your model !__ If you know which biological question you are testing, then you should already know what your plot will look like !
+
+```{r}
+library(Hmisc) #stat_summary()
+library(ggplot2)
+
+
+mean <- stat_summary(data=data, fun.data="mean_se", geom="point", position=position_dodge(width=0.3), pch=21, size=1.5)
+
+errorbar <- stat_summary(data=data, fun.data="mean_se", geom="errorbar", width=0.3, position=position_dodge(width=0.3), colour="black")
+
+
+```
+
+The goal now is to call the ggplot() function. This works a bit like a linear puzzle that can be built pieces by pieces:
+
+- specificy your dataset: ggplot(data= ---)
+
+- structure the 'aesthetics' of your plot: here, you can tell ggplot which variable you want on the y axis, which on the x axis, and also differentiate some treatments by colour, shape, etc.: ggplot(data=data, aes(x = ---, y = ---, fill = ---, group = ---))
+
+
+- you can now add a lot of extra details to your plot, these can be added after the initial function call and are separated by the '+' sign:
+ggplot(data=data, aes(x = ---, y = ---) + --- + --- + --- + --- + --- + ---
+
+- call the two elements that have been pre-calculated with the stat_summary function, and add them to your plot: ggplot(data=data, aes(x = ---, y = ---)) + mean + errorbar
+
+```{r}
+ggplot(data=data, aes(x = data$treatment, y = data$lifespan)) + mean + errorbar
+```
+
+Congratulations, you have just produced a nice plot, using these two packages !
+By default, plots generated with ggplot will have this distinct look, with a grey background, a white grid, etc. (honestly, it doesnt look that great...)
+
+
+Here is a list of small extras that you can add to your plot (you will find them in the cheatsheet as well).
+
+```{r warning=FALSE, eval=FALSE}
++ facet_grid(~genotype) # a very important command, especially with full-factorial experiments. This produces two (or more) plots side by side, one for each level of your factor !
+
++ xlab("\nTreatment") # rename your x-axis. By default, it will be the header of the matching column in your Excel file.
+
++ ylab("\nLifespan") # rename your y-axis. By default, it will be the header of the matching column in your Excel file.
+
++ ylim(c(0,NA)) # your y-axis will go from 0 to the max value in your data. By default it might not go down to zero, only up to the smallest value in your data !
+
++ theme_bw() # use a black and white theme, instead of the grey one.
+
++ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) # remove the grid entirely from your plot.
+
++ scale_fill_manual(values=c("white", "gray", "black")) # very useful, you can manually tell ggplot which color to assign to the levels of your factors.
+
++ theme(legend.text = element_text(face = "italic")) # if your legend contains species name, for instance, you can turn them italic here (even if they appear normally in your Excel file).
+
+```
+
+There are a LOT of possibilities, don't hesitate to experiment, look for more options online (Stack Overflow), etc.
+
+NB: it is better to process your figure (legends, some words in italic, etc.) entirely here, as long as you know how to code it. If you export a raw figure and process it using a different software, it MIGHT be the case that you will lose a bit of resolution on the processed file.
+
+OK ! Let's try a more elaborate plot that uses some (or all) of these commands ! You can type them one at a time, and see the changes appear in real time.
+
+
+```{r}
+ggplot(data=data, aes(x = treatment, y = lifespan, fill=genotype, group=genotype)) + errorbar + mean + facet_grid(~genotype) + xlab("\nTreatment") + ylab("\nLifespan") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values=c("white", "gray80", "gray40", "black")) + theme(legend.text = element_text(face = "italic"))
+
+ggsave("plot_day2_lifespan.tiff", units="in", width=5, height=2, dpi=600, compression = 'lzw')
+```
+
+This function ggsave() should be written just after the line of code that produces your plot.
+Run the line that creates your plot, then run the ggsave line: this will save a high quality export of your plot directly in your working directory ! You can adjust the resolution (dpi=), but also the 'width' and 'height' of you plot, if you want your plot to look better !
+
+NB: publication journals generally ask for line charts above 600 dpi, sometimes even 1000 dpi. You can zoom to infinity on your plot, and it will still look crisp from up close !
+
+## EXERCISE:
+Ok, now you should be able to produce the graph of your choice, using any of the other continuous (not binomial) variables that are available in the dataset! For instance, if you chose "fecundity" in your previous exercise, you can keep the same variable and produce the matching plot.
+
+
+# Step 5: create a subset of your data
+
+Although we didn't need to use it before, there will be times when you want to process analyses or produce graphs from a smaller part of your dataset (for instance, if you want to exclude one treatment, or keep only one genotype, etc.)
+
+This can be done using the subset() function, which works which __logical operators__ (we've seem some of those last week).
+
+WARNING: if you call your new subset 'data' here, once you run this line of code, R will replace your previous dataset and keep only the reduced one. You can see this change occur in real time in the Data window.
+
+This could be useful if any further test or plot that you want to produce in this script will rely only on your subset of interest...
+
+However, if you want to work with multiple subsets within one script, it is recommended to call each subset differently, and keep 'data' as the mother dataset !
+
+In that case, do not forget to call the right subset of data whenever a function requires it  ! (example: ANOVAs, ggplot, etc.)
+
+
+Different types of logical operators can be used when creating subsets (we have seen some of them last week):
+
+
+```{r}
+sub1<-subset(data, clutches>0)
+
+sub2<-subset(data, clutches<3)
+
+sub3<-subset(data, clutches==0)
+
+sub4<-subset(data, clutches!=0)
+
+sub5<-subset(data, treatment=="T2")
+
+sub6<-subset(data, genotype=="Mugg11c" | genotype=="Mugg6b")
+
+sub7<-subset(data, treatment=="T3" & genotype=="Mugg7a")
+```
+
+What do all these scripts do, which subsets of data do they create ?
+
+
+How would you create a subset that keeps only individuals that have produced 3 clutches AND had a lifespan below 20 days ?
+
+
+# Step 6: work with Generalized Linear Models (logistic regression)
+
+So far you will notice that we have worked with a continuous response variable exclusively. However, there could be some variables in your dataset that you want to analyze and look more like "yes" or "no" type of data ( _infected_ or _not infected_, _survived_ or _did not survive_, etc). In your dataset, this should be typed as a 0 or 1 value: here, this is the case for the 'death' variable.
+
+This kind of data follows a binomial distribution (number of "yes" occurences cases among N "yes" / "no" occurences). Linear models can still be fitted to this kind of data. __However, since it does not follow a normal distribution, we will have to use a different function: glm()__
+
+```{r, eval=FALSE}
+?glm()
+```
+
+The major difference with the lm() function that we used before is that you also have to specify a 'family' (by default, gaussian), depending on the distribution that is followed by your data.
+
+When we specify any other family than the normal distribution, this is called a 'generalized' linear model, or GLM. In that case, you also have to specify a 'link' function !
+
+Here are a few common examples:
+
+gaussian (link="identity")   (by default)
+
+binomial (link="logit")      (0 or 1)
+
+poisson (link="log")         (count data)
+
+gamma (link="inverse")       (continuous)
+
+In this case, we want to use the glm() function with a binomial family, in order to fit a logistic regression to the 'death' variable in our dataset:
+
+```{r}
+g1<-glm(data=data, death ~ treatment + genotype + treatment:genotype, family=binomial(link="logit"))
+
+summary(g1)
+
+anova(g1)
+```
+
+NB: if you use the regular anova() function with a glm() output, R will not provide you with the p-values. You have to use the Anova() function in the car package to see them  !
+
+```{r}
+Anova(g1,type="II")
+```
+
+Here, given that there seems to be a significant interaction term, I would suggest re-running with a type III ANOVA this time.
+
+```{r}
+Anova(g1,type="III")
+```
+
+In that case, you can see that the 'genotype' fixed effect goes from a 0.03 p-value (significant) to a completely unsignificant value, probably because type II is not suited to deal with interactions.
+
+This is however quite a delicate issue, so I would strongly advise to make __your own documentation__ about the subject, and decide accordingly, which method you want to use !
+
+As a general rule, please remember: in real life experiments, it is rather rare than you end up with a variable that follows a true, very nicely accurate normal distribution !
+
+However, it is sometimes assumed that the assumptions of the ANOVA (normality of the residuals, homogeneity of variance) can be relaxed a little bit, especially normality...
+
+__You are the judge__, whether you want to force a simple linear model on your not-so-normally distributed data, and trust statistical analyses done this way.
+
+Yet, you will also very often end up with data that match a Poisson distribution quite nicely (for instance, fecundity would go from 0 to any positive value, and contain only integer values), or a binomial distribution (we just saw one example here).
+
+Again, I would strongly advice having a look at the different possibilities online, to see how different types of data are generally processed by scientists/statisticians :)
+
+Chances are, someone has run into the same troubles as you, or has dealt with a very similar experimental design in the past !
+
+
+
+# Congratulations, you've reached the end of this tutorial !
+
+## Using the knowledge from today and last week, you will be now be faced with a challenge !
