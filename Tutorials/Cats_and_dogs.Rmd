@@ -1,0 +1,231 @@
+---
+title: "Bringing together the cats and the dogs - A detective race"
+author: "Ramsy Agha and Florent Manzi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Do feel confident to face a challenge?
+
+In this tutorial, you will be faced with the cahllenge of completing the tasks indicated in your own RStudio. You are not expected to know eveything that is being asked. Instead, __your main task is to investigate by any means necessary and find out the way to answer the questions given or, if provided, create identical plots/dataframes__. 
+
+## Rules:
+
+- This challenge is done in __groups of 2 persons__.
+
+- The race consists of __8 Challenges__ of increasing difficulty. Every challenge provides different scores. Consider using your time and effort wisely. If you get stuck in a challenge, we can always move to another one! 
+
+- Everytime a group accomplishes a challenge, the group will __report its progress under this [spreadsheet](https://docs.google.com/spreadsheets/d/1UmjNhUrL0ZviYlEagscaE26VPHIqw_Otgto7Kvo1PE4/edit?usp=sharing)__. In order to obtain the points, Florent or me will verify on your laptops the validity of your code (Note that fro ggplot cahllenges, you need to produce quasi-identical graphs). __Only after verification the points will be added__.
+- __All sources of information are permitted__: Course material, cheatsheets, google and any other online resource, you name it.
+
+
+Good luck!
+
+
+***
+
+
+We will be using the same dataset as before used in [Agha et al. 2016 Sci Reps](https://www.nature.com/articles/srep35039/). 
+
+The instructors may provide some hints to help you, but it is *strongly encouraged that you use all the external help you can get*, included the ggplot cheatsheet (provided in the respective folder of the course repository), google, stackoverflow, or the [R Cookbook](http://www.cookbook-r.com/). Everything is allowed, but __this document will not provide the code solution__. The solutions will only be provided after the course is over. 
+
+Ready? Let's go! 
+
+***
+
+Open a new script file and get started
+
+Start by loading the dataset GrazingExp.csv which is located in the datasets folder. Make sure that you have defined your working directory upfront using `setwd()` and that you loaded the ggplot2, Hmisc, and plyr packages. 
+
+```{r, echo=T, message=FALSE}
+library(ggplot2)
+library(plyr)
+library(Hmisc)
+
+data <- read.csv("datasets/GrazingExp.csv", header = T, sep = ",")
+
+```
+
+
+Ok, I suggest you inspect the data to refresh your memory as to which kind of information the dataset contains. As you know already, this dataset was obtained from an experiment where single _Daphnia_ individuals were maintained under different diets (i.e. treatments). We examined different life history traits during the experiment to evaluate the fitness of daphnids to infer the nutritional quality of such diets. 
+
+Among the life history traits analyzed, body size of adults and offspring were examined. A fair question to be made is if the size of the adult correlates with the mean size of its offpring (let's focus on the offspring of the first clutch). You want to evaluate this graphically, so...
+
+## CHALLENGE 1 - Write the code that produces this plot - 3 points*
+
+```{r, warning=FALSE}
+a <- ggplot(data=data, aes(x=size_m, y=size_c1)) + 
+  geom_point() +
+  geom_smooth(method = lm, se = F) + 
+  ylab(expression(paste("Body Size of Offspring (", mu,"m)"))) +
+  xlab(expression(paste("Body Size of Adults (", mu,"m)"))) +   
+  ggtitle ("Relation between body size of adults and Offspring") + 
+  theme_bw()
+
+a
+```
+
+There seems to be a possitive correlation, which is something one would expect (the bigger the mum, the bigger the baby). 
+
+
+Let see if this relation is different for each clone (my guess it's not, but lets find out). Can you create this graph? 
+
+
+***
+
+
+## CHALLENGE 2 - Write the code that produces this plot - 3 points*
+```{r, warning=FALSE}
+
+a <- ggplot(data=data, aes(x=size_m, y=size_c1, group=genotype, color=genotype)) + 
+  geom_point() +
+  geom_smooth(method = lm, se = F) + 
+  ylab(expression(paste("Body Size of Offspring (", mu,"m)"))) +
+  xlab(expression(paste("Body Size of Adults (", mu,"m)"))) +   
+  ggtitle ("Relation between body size of Adults and Offspring") + 
+  theme_bw()
+
+a
+
+```
+
+Well, they all see pretty similar. How about this relationship if we have a look to the different treatments?
+
+
+***
+
+## CHALLENGE 3 - Write the code that produces this plot - 1 point*
+```{r, warning=FALSE}
+a <- ggplot(data=data, aes(x=size_m, y=size_c1, group=treatment, color=treatment)) + 
+  geom_point() +
+  geom_smooth(method = lm, se = F) + 
+  ylab(expression(paste("Body Size of Offspring (", mu,"m)"))) +
+  xlab(expression(paste("Body Size of Adults (", mu,"m)"))) +   
+  ggtitle ("Relation between body size of adults and Offspring") + 
+  theme_bw()
+
+a
+```
+
+Well, the slope of the lines is very similar among treatments (almost parallel), but their intercepts are pretty different (i.e. the appear at different hights). This is reflecting differences in overall body size among treatments. That's interesting! Let's compare the mean body sizes per treatment and genotype.
+
+Plot the __mean size of adults within a treatment, including the standart error of that mean__.
+However, our dataset does not include that mean, and the errors need to be also computed first.
+Use the split,apply combine Strategy to produce the following dataset.
+
+
+***
+
+## CHALLENGE 4 - Write the code that creates the dataframe below - 1 point*
+
+```{r, warning=FALSE}
+summary <- ddply(data, c("treatment", "genotype"), summarise, 
+                 n = sum(!is.na(size_m)),
+                 mean = mean(size_m, na.rm = T),
+                 std_dev = sd(size_m, na.rm = T),
+                 se = std_dev/sqrt(n))
+
+summary
+```
+
+Using this new dataset that contains the number of cases, the mean adult body size, its standard deviation and standard error, create the following bar plots (error bars are standard errors)
+
+
+***
+
+
+## CHALLENGE 5 - Write the code that produces this plot - 4 points*
+```{r}
+
+f <- ggplot(summary, aes(x= treatment, y= mean, fill = treatment)) +   
+  facet_wrap( ~ genotype, ncol=2 ) +
+  geom_bar(stat="identity", position="dodge", colour = "black") +
+  coord_cartesian(ylim = c(1250,1650)) + 
+  geom_errorbar(aes(ymin =mean -se , ymax = mean+se), width=.15, position=position_dodge(0.9)) +
+  ylab(expression(paste("Body Size (", mu,"m)"))) +
+  xlab("Treatment") + 
+
+  ggtitle ("Body size of adults")
+
+
+f  
+  
+```
+
+
+
+Ok, now we are moving to a completely new dataset, with new factors and variables. We will use 'Infection_dataset.csv' (';' used as separator). Here, _Daphnia_ were infected or not with the parasite _Metschnikowia_, and fed two different diets. 
+
+
+*** 
+  
+
+## CHALLENGE 6 - Using the "Infection_dataset" file, create a subset of data including __only infected individuals that have produced spores__ - 1 point*
+
+```{r}
+
+
+data <- read.table("datasets/Infection_dataset.csv",header=T,sep=';')
+
+
+data$Exposure<-as.factor(data$Exposure)
+
+data$Food<-as.factor(data$Food)
+
+data$Clone<-as.factor(data$Clone)
+
+data$Replicate<-as.factor(data$Replicate)
+
+
+inf<-subset(data, Spore_count>0)
+```
+
+
+***
+
+## CHALLENGE 7 - Using __the same subset__, perform the statistical analyses necessary to answer this question: is there an effect of host diet on spore production ? You can perform by stepwise regression to choose the best model - 4 points*
+
+```{r, include=FALSE}
+mod1 <- lm(Spore_count ~ Food + Clone + Food:Clone, data=inf)
+
+summary(mod1)
+
+anova(mod1)
+
+
+mod2 <- lm(Spore_count ~ Food + Clone, data=inf)
+
+summary(mod2)
+
+anova(mod2)
+
+
+AIC(mod1, mod2)
+
+```
+
+
+***
+
+
+## CHALLENGE 8 - Using the "Infection_dataset" file, write the code that produces this plot (with very funky colors) - 5 points*
+
+```{r}
+
+
+data$Food <- factor(data$Food, levels=c("Scenedesmus", "Microcystis"), labels=c("Scenedesmus", "Microcystis"))
+
+
+mean <- stat_summary(data=data, fun.data="mean_se", geom="point", position=position_dodge(width=0.3), pch=21, size=2)
+
+errorbar <- stat_summary(data=data, fun.data="mean_se", geom="errorbar", width=0.3, position=position_dodge(width=0.3), colour="green")
+
+lines <- stat_summary(data=data, fun.data="mean_se", geom="line", position=position_dodge(width=0.3), colour="yellow")
+
+ggplot(data=data, aes(x = Exposure, y = Total_offspring, fill=Food, group=Food)) + errorbar + mean + lines + facet_grid(~Clone) + xlab("\nExposure") + ylab("\nNumber of offspring") + theme_bw() + scale_fill_manual(values=c("orange", "blue")) + theme(legend.text = element_text(face = "italic"))
+```
+
