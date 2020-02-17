@@ -30,6 +30,7 @@ data <- read.table("GrazingExp.csv",header=T,sep=',')
 Check if this matches the way you recorded your csv file (header, separator).
 Click on the "grid" icon in the Data window.
 
+
 Does your data appear correctly ? It should be recognized as a table with '237 obs. of 13 variables'
 
 ```{r}
@@ -141,22 +142,14 @@ WARNING: the p-values that you see here are not the ones you are interested in, 
 
 ```{r}
 anova(ml1)
-##Analysis of Deviance Table (Type II tests)
-
-#Anova Table (Type II tests)
-
-#Response: lifespan
-#                    Df Sum Sq Mean Sq F value   Pr(>F)
-#treatment            3  684.8 228.279  7.5869 7.488e-05 ***
-#genotype             3  317.5 105.817  3.5169   0.01596 *  
-#treatment:genotype   9  400.7  44.524  1.4798   0.15659    
-#Residuals          221 6649.5  30.088  
 ```
 
 How do you interpret this output ? Which values will you have to report in your ANOVA tables (e.g. in the 'Results' section of your thesis/paper ?)
 
 
 TIP: you can copy/paste your ANOVA results as 'green text' in your code (see above). This way, you can just open your scripts from two years ago and you won't have to re-run everything !
+
+Using 'ctrl + Shift + C', you can add a # in front of each line in your comments.
 
 
 NB: The 'anova' function from before always performs Type I tests (each variable is added in sequential order).
@@ -245,14 +238,14 @@ If you perform an ANOVA on your first (full) model and the interaction term come
 
 Alright, now that you've chosen the final model, we can still check how the data look after fitting this model !
 
-Remember our two conditions: __homogeneity of the variance__ & __normality of the residuals__.
+In fact, there are two conditions that need to be checked in order to perform an ANOVA: __homogeneity of the variance__ & __normality of the residuals__.
 
 ```{r}
 #fitted vs residuals (homogeneity of variance)
 plot(ml2)
 ```
 
-NB: you might need to re-run this line a few times until we reach the "fitted vs. residuals" output in the plot window
+NB: you might need to re-run this line a few times until we reach the __fitted vs. residuals__ output in the plot window.
 
 Alright, seems good ! No separate clusters, looks quite homogeneous.
 
@@ -266,7 +259,17 @@ hist(resid(ml2))
 
 Here it seems a little biased on one side (but for the sake of this example, let's say that we're okay with it).
 
-These steps help you 'validate' your model by evualuating if you used an adequate formula, and were indeed allowed to run an ANOVA on this dataset.
+These steps help you 'validate' your model by evaluating if you used an adequate formula to fit your data, and were indeed allowed to run an ANOVA on this response variable.
+
+
+
+TIP: you can also download the 'ggResidpanel' package, and use the resid_panel() function to easily produce these plots (with interactive properties). You can also export them easily.
+
+```{r}
+library(ggResidpanel)
+
+resid_panel(ml2)
+```
 
 
 ## EXERCISE:
@@ -284,40 +287,23 @@ In that case, you want to perform 'post-hoc' tests (most of the time, you want t
 
 We will use the common __Tukey's "Honestly Significant Difference" test__.
 
-The TukeyHSD() function is available in base R and takes a fitted aov object.
+The TukeyHSD() function is available in base R and takes a fitted aov object. It basically performs a series of t-tests corrected for multiple comparisons (hence the 'adjusted' p-values).
 
 Here, we can try yet another way to run an anova in R, the aov() function. You can directly feed the formula of your linear model to R using this function, and this will give you the results or your ANOVA right away.
 
 ```{r}
-graz1<-aov(lifespan ~ treatment, data=data)
+mod1<-aov(lifespan ~ treatment * genotype, data=data)
 
-tkt1<-TukeyHSD(graz1)
+tkt1<-TukeyHSD(mod1)
 
 tkt1
 ```
 
 How would you interpret this output ? Which information did we learn that wasn't provided by the ANOVA alone ?
 
-We can also try it with the 'genotype' factor.
+TIP: after you have produced the full factorial plot in Step 4, you can go back to these results to compare two specific means of interest (example: Mugg11c vs. Mugg6b in the T2 treatment), to determine if they are significantly different from other.
 
-```{r}
-graz2<-aov(lifespan ~ genotype, data=data)
-
-tkt2<-TukeyHSD(graz2)
-
-tkt2
-```
-
-
-Finally, using the final model (the one that you chose to stick with after the stepwise regression method):
-
-```{r}
-graz3<-aov(lifespan ~ treatment + genotype, data=data)
-
-tkt3<-TukeyHSD(graz3)
-
-tkt3
-```
+Notice that the 'lwr' and 'upr' values delimit confidence intervals. If 0 is not contained in that interval, the p-value will be significant.
 
 
 # Step 4: Plot your data using ggplot2 (feat. Hmisc, some life hacks)
@@ -340,7 +326,7 @@ library(ggplot2)
 
 mean <- stat_summary(data=data, fun.data="mean_se", geom="point", position=position_dodge(width=0.3), pch=21, size=1.5)
 
-errorbar <- stat_summary(data=data, fun.data="mean_se", geom="errorbar", width=0.3, position=position_dodge(width=0.3), colour="black")
+errorbar <- stat_summary(data=data, fun.data="mean_se", geom="errorbar", width=0.3, position=position_dodge(width=0.3), colour="black", alpha=0.3)
 
 
 ```
@@ -355,13 +341,20 @@ The goal now is to call the ggplot() function. This works a bit like a linear pu
 - you can now add a lot of extra details to your plot, these can be added after the initial function call and are separated by the '+' sign:
 ggplot(data=data, aes(x = ---, y = ---) + --- + --- + --- + --- + --- + ---
 
-- call the two elements that have been pre-calculated with the stat_summary function, and add them to your plot: ggplot(data=data, aes(x = ---, y = ---)) + mean + errorbar
+We will now call the two elements that have been pre-calculated with the stat_summary function, and add them to our plot: ggplot(data=data, aes(x = ---, y = ---)) + mean + errorbar.
 
 ```{r}
 ggplot(data=data, aes(x = data$treatment, y = data$lifespan)) + mean + errorbar
 ```
 
+We will also use the extra element facet_grid(~ genotype) to produce the full factorial plot.
+
+```{r}
+ggplot(data=data, aes(x = data$treatment, y = data$lifespan)) + mean + errorbar + facet_grid(~genotype)
+```
+
 Congratulations, you have just produced a nice plot, using these two packages !
+
 By default, plots generated with ggplot will have this distinct look, with a grey background, a white grid, etc. (honestly, it doesnt look that great...)
 
 
@@ -373,6 +366,8 @@ Here is a list of small extras that you can add to your plot (you will find them
 + xlab("\nTreatment") # rename your x-axis. By default, it will be the header of the matching column in your Excel file.
 
 + ylab("\nLifespan") # rename your y-axis. By default, it will be the header of the matching column in your Excel file.
+
++ ggtitle("\nTitle of your plot") # give a name to your plot. By default it will appear in the upper left corner. 
 
 + ylim(c(0,NA)) # your y-axis will go from 0 to the max value in your data. By default it might not go down to zero, only up to the smallest value in your data !
 
@@ -394,7 +389,7 @@ OK ! Let's try a more elaborate plot that uses some (or all) of these commands !
 
 
 ```{r}
-ggplot(data=data, aes(x = treatment, y = lifespan, fill=genotype, group=genotype)) + errorbar + mean + facet_grid(~genotype) + xlab("\nTreatment") + ylab("\nLifespan") + theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + scale_fill_manual(values=c("white", "gray80", "gray40", "black")) + theme(legend.text = element_text(face = "italic"))
+ggplot(data=data, aes(x = treatment, y = lifespan, fill=genotype, group=genotype)) + errorbar + mean + facet_grid(~genotype) + xlab("Treatment") + ylab("\nLifespan") + theme_bw() + scale_fill_manual(values=c("white", "gray80", "gray40", "black")) + theme(legend.text = element_text(face = "italic")) + ggtitle("\nTitle of your plot") + theme(plot.title = element_text(hjust = 0.5))
 
 ggsave("plot_day2_lifespan.tiff", units="in", width=5, height=2, dpi=600, compression = 'lzw')
 ```
@@ -420,7 +415,7 @@ This could be useful if any further test or plot that you want to produce in thi
 
 However, if you want to work with multiple subsets within one script, it is recommended to call each subset differently, and keep 'data' as the mother dataset !
 
-In that case, do not forget to call the right subset of data whenever a function requires it  ! (example: ANOVAs, ggplot, etc.)
+In that case, do not forget to call the right subset of data whenever a function requires it, such as ggplot or anova  ! (example: data=sub1)
 
 
 Different types of logical operators can be used when creating subsets (we have seen some of them last week):
@@ -445,7 +440,12 @@ sub7<-subset(data, treatment=="T3" & genotype=="Mugg7a")
 What do all these scripts do, which subsets of data do they create ?
 
 
-How would you create a subset that keeps only individuals that have produced 3 clutches AND had a lifespan below 20 days ?
+How would you create a subset that keeps only individuals that have produced exactly 3 clutches AND had a lifespan below 20 days ?
+
+```{r}
+sub8<-subset(data, clutches==3 & lifespan <20)
+```
+
 
 
 # Step 6: work with Generalized Linear Models (logistic regression)
@@ -494,9 +494,9 @@ Here, given that there seems to be a significant interaction term, I would sugge
 Anova(g1,type="III")
 ```
 
-In that case, you can see that the 'genotype' fixed effect goes from a 0.03 p-value (significant) to a completely unsignificant value, probably because type II is not suited to deal with interactions.
+In that case, you can see that the 'genotype' fixed effect goes from a 0.03 p-value (significant) to a completely unsignificant p-value, probably because type III is more suited to estimate interactions terms, at the expense of fixed effects.
 
-This is however quite a delicate issue, so I would strongly advise to make __your own documentation__ about the subject, and decide accordingly, which method you want to use !
+As you can see, this can be quite a delicate issue, so I would strongly advise to make __your own documentation__ about the subject, and decide accordingly, which method you want to use !
 
 As a general rule, please remember: in real life experiments, it is rather rare than you end up with a variable that follows a true, very nicely accurate normal distribution !
 
@@ -514,4 +514,15 @@ Chances are, someone has run into the same troubles as you, or has dealt with a 
 
 # Congratulations, you've reached the end of this tutorial !
 
-## Using the knowledge from today and last week, you will be now be faced with a challenge !
+
+## Addendum:
+
+```{r, eval=FALSE}
+
++ theme_update(plot.title = element_text(hjust = 0.5)) #will change the default position of ggtitle to be centered
+
+mean(subset(data$lifespan, data$genotype=="Mugg11c" | data$genotype=="Mugg6b")) #calculate the mean of a specific subset of data
+
+mean(data[data$genotype=="Mugg11c" | data$genotype=="Mugg6b",9]) #same output, but using square brackets to locate the data ('lifespan' is in the 9th column)
+```
+
